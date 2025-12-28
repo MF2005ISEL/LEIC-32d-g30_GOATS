@@ -9,7 +9,9 @@ const Status INVALID_TABLE       = { 4, "Invalid table pointer" };
 const Status INVALID_ROW         = { 5, "Invalid row" };
 const Status INVALID_FILE_NAME   = { 6, "Invalid file name" };
 const Status CANNOT_OPEN_FILE    = { 7, "Unable to open file" };
-const Status ERROR               = { 8, "General error" };
+const Status NUMBER_OVERFLOW     = { 8, "Number is outside valid range" };
+const Status INVALID_NUMBER      = { 9, "Number is outside valid range" };
+const Status ERROR               = { 10, "General error" };
 
 void announceStatus(Status status) 
 {

@@ -1,26 +1,21 @@
 #include "file_utils.h"
-#include "../util/memory.h"
+#include "memory.h"
 #include "../status/status.h"
 
 #include <stdlib.h>
-
-void announceError(Status status) 
-{
-    fprintf(stderr, "\n%s\n", status.message);
-}
 
 // Open file
 FILE* open_file(const char *fileName, const char* action)
 {
     if (fileName == NULL) 
     {
-        announceError(INVALID_FILE_NAME);
+        announceStatus(INVALID_FILE_NAME);
         return NULL;
     }
 
     FILE *file = fopen(fileName, action);
     if (file == NULL)
-        announceError(CANNOT_OPEN_FILE);
+        announceStatus(CANNOT_OPEN_FILE);
         
     return file;
 }

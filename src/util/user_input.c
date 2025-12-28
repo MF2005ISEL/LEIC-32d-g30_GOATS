@@ -1,16 +1,23 @@
-#include "../status/status.h"
 #include "user_input.h"
 #include "string_util.h"
 #include "memory.h"
 
+#include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <errno.h>
 
 #define INITIAL_STR_CAP 4
 
-#define BUFFER_CAP 999
+#define BUFFER_CAP 1024
+#define COUNTING_BASE 10
+
+bool dealOverflow() 
+{
+    return errno != ERANGE;
+}
 
 Status processNaturalNum(const char* str, size_t* num) 
 {
@@ -20,6 +27,7 @@ Status processNaturalNum(const char* str, size_t* num)
 
     i = 0;
     cap = INITIAL_STR_CAP;
+    errno = 0;
 
     safeMalloc((void**) &strProcessing, cap);
 
@@ -28,8 +36,8 @@ Status processNaturalNum(const char* str, size_t* num)
         if (isdigit(*str)) 
         {
             strProcessing[i++] = *(str++);
-            if (i == cap)
-                dynamicGrowth((void**) &strProcessing, &cap);
+            if (i + 1 == cap)
+                dynamicGrowth((void**)&strProcessing, &cap);
                 
             continue;
         }
@@ -37,18 +45,21 @@ Status processNaturalNum(const char* str, size_t* num)
         if (!isspace(*(str++))) // Ignores white space and flags for repetition if character isnt a number nor whitespace
         {   
             free(strProcessing);
-            return ERROR;
+            return INVALID_NUMBER;
         }
     }
 
     if (i < 1)
     {   
         free(strProcessing);
-        return ERROR;
+        return INVALID_NUMBER;
     }
 
     strProcessing[i] = '\0';
-    *num = atoll(strProcessing);
+    *num = strtoll(strProcessing, NULL, COUNTING_BASE);
+
+    if (!dealOverflow()) 
+        return NUMBER_OVERFLOW;
 
     free(strProcessing);
     

@@ -112,33 +112,6 @@ char** table_get_cell_ref(const table* t, const size_t row, const char col_lette
     return &(t->rows[row].cells[col]);
 }
 
-Status table_remove_last_row(table* t)
-{
-    int cell;
-
-    if (t == NULL || t->row_num == 0)
-        return INVALID_ROW;
-
-    t->row_num--;
-
-    for (cell = 0; cell < t->col_num; cell++) // Free each cell
-        free(t->rows[t->row_num].cells[cell]);
-
-    free(t->rows[t->row_num].cells); // Free row
-
-    // Shrink rows array
-    if (t->row_num != 0) 
-    {
-        safeRealloc((void**)&t->rows, t->row_num * sizeof(row));
-        return OK;
-    }
-        
-    free(t->rows);  // Free manually instead of reallocing to 0 because safeRealloc deals with reallocing to 0 as an error
-    t->rows = NULL;
-
-    return OK;
-}
-
 void table_destroy(table** tptr)
 {
     table* t;
@@ -149,8 +122,9 @@ void table_destroy(table** tptr)
     t = *tptr;
 
     // remove all rows safely
-    while (t->row_num > 0)
-        table_remove_last_row(t);
+    while (t->row_num > 0) 
+        free_array((void**)&t->rows[--(t->row_num)].cells, t->col_num);
+    free(t->rows);
 
     free(t);
     *tptr = NULL;
@@ -162,19 +136,15 @@ void table_delete_row(table* t, size_t row_index)
 		return;
 
     row* r = &t->rows[row_index];
-    for (size_t c = 0; c < t->col_num; c++) {
-        free(r->cells[c]);
-    }
-    free(r->cells);
+    free_array((void**)&r->cells, t->col_num);
 
-	// fill gap occupied by removed row
-    for (size_t i = row_index; i < t->row_num - 1; i++) {
+	// Shift back array because of the removed array
+    for (size_t i = row_index; i < t->row_num - 1; i++)
         t->rows[i] = t->rows[i + 1];
-    }
 
     t->row_num--;
 
-    t->rows = realloc(t->rows, sizeof(row) * t->row_num);
+    safeRealloc((void**)&t->rows, sizeof(row) * t->row_num);
 }
 
 void table_insert_row(table* t, size_t row_index)
@@ -182,19 +152,18 @@ void table_insert_row(table* t, size_t row_index)
     if (!t || row_index > t->row_num) return;
 
     // allocate memory for an extra row
-    t->rows = realloc(t->rows, sizeof(row) * (t->row_num + 1));
+    safeRealloc((void**)&t->rows, sizeof(row) * (t->row_num + 1));
 
     // move existing rows to fit the new one
-    for (size_t i = t->row_num; i > row_index; i--) {
+    for (size_t i = t->row_num; i > row_index; i--)
         t->rows[i] = t->rows[i - 1];
-    }
+    
 
     row* new_row = &t->rows[row_index];
-    new_row->cells = malloc(sizeof(char*) * t->col_num);
+    safeMalloc((void**)&new_row->cells, sizeof(char*) * t->col_num);
     
-    for (size_t c = 0; c < t->col_num; c++) {
+    for (size_t c = 0; c < t->col_num; c++)
         new_row->cells[c] = strdup("");
-    }
 
     t->row_num++;
 }

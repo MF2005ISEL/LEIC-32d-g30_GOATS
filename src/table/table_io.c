@@ -2,7 +2,7 @@
 #include "string.h"
 #include "stdlib.h"
 
-#include "../file_utils/file_utils.h"
+#include "../util/file_utils.h"
 #include "../util/string_util.h"
 #include "../util/memory.h"
 
@@ -131,9 +131,7 @@ table* table_load_csv(const char* filename)
     }
 
     // Free first line tokens
-    for (col = 0; col < col_count; col++)
-        free(tokens[col]);
-    free(tokens);
+    free_array(tokens, col_count);
     free(line);
 
     // --- Process remaining lines ---
@@ -151,9 +149,7 @@ table* table_load_csv(const char* filename)
             table_set_cell(t, t->row_num - 1, 'A' + col, clean);
         }
 
-        for (col = 0; col < col_count; col++)
-            free(tokens[col]);
-        free(tokens);
+        free_array(tokens, col_count);
         free(line);
     }
 
