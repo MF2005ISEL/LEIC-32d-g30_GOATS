@@ -12,8 +12,6 @@
 #include "../util/string_util.h"
 #include "../util/user_input.h"
 
-#define DEFAULT_COMMANDS_AMOUNT 7
-
 static void cmd_help(Context*, const char**);
 static void cmd_exit(Context*, const char**);
 static void cmd_load(Context*, const char**);
@@ -23,7 +21,7 @@ static void cmd_filter(Context*, const char**);
 static void cmd_command(Context*, const char**);
 
 // All builtin commands
-static const Command builtin_commands[DEFAULT_COMMANDS_AMOUNT] = {
+static const Command builtin_commands[] = {
     { "help",    "List available commands",          cmd_help,       0 },
     { "exit",    "Exit program",                     cmd_exit,       0 },
     { "load",    "Load table from file",             cmd_load,       1 },
@@ -32,6 +30,8 @@ static const Command builtin_commands[DEFAULT_COMMANDS_AMOUNT] = {
     { "filter",  "Filter rows based on column data", cmd_filter,     2 },
     { "command", "Load a new command from plugin",   cmd_command,    1 }
 };
+
+const int DEFAULT_COMMANDS_AMOUNT = sizeof(builtin_commands) / sizeof(Command);
 
 //----------------------------------------
 //  Command Registry
@@ -143,7 +143,8 @@ void command_prompt_run(CommandRegistry* reg)
         }
 
         // skip empty lines
-        if (input[0] == '\0') {
+        if (input[0] == '\0') 
+        {
             free(input);
             continue;
         }
@@ -153,8 +154,9 @@ void command_prompt_run(CommandRegistry* reg)
 
         input = NULL;
 
-        if (token_amount == 0) {
-            free_split(tokens, token_amount);
+        if (token_amount == 0) 
+        {
+            free(tokens);
             continue;
         }
 
@@ -166,7 +168,7 @@ void command_prompt_run(CommandRegistry* reg)
         {
             printf("Command '%s' not found\n", command_name);
 
-            free_split(tokens, token_amount);
+            free_array((void**)tokens, token_amount);
             continue;
         }
         
@@ -177,23 +179,22 @@ void command_prompt_run(CommandRegistry* reg)
         {
             printf("Wrong argument amount for command '%s', expected: %zu\n",
                    command->name, command->args_amount);      
-            free_split(tokens, token_amount);
+            free_array((void**)tokens, token_amount);
             continue;
         }
         
         // Build args array pointer (const char** expected by CommandFunc)
         args = NULL;
 
-        if (args_count > 0) {
+        if (args_count > 0)
             // tokens[1] .. tokens[token_amount-1]
             args = &tokens[1];
-        }
         
         // Execute command
         command->func(&ctx, (const char**)args);
         
         // free token strings & array
-        free_split(tokens, token_amount);
+        free_array((void**)tokens, token_amount);
     }
 }
 
@@ -226,7 +227,7 @@ static void cmd_exit(Context* context, const char** args)
 
     reg = context->registry;
 
-    free(reg->commands);
+    free_array((void**)&reg->commands, reg->command_amount);
     free(reg);
 
     printf("Closing the program...\n");
@@ -380,8 +381,8 @@ static void cmd_show(Context* context, const char** args)
 
 typedef struct
 {
-    unsigned short col_index;
     const char* expected_value;
+    unsigned short col_index;
 } filter_context;
 
 static bool filter_predicate(const void* row_ptr, const void* ctx_ptr)
@@ -480,7 +481,7 @@ static void cmd_command(Context* ctx, const char** args)
     init(ctx->registry);
 
     // Guardar handle para poder fechar depois
-    ctx->plugin_handles = realloc(ctx->plugin_handles, sizeof(void*) * (ctx->plugin_count + 1));
+    safeRealloc((void**)ctx->plugin_handles, sizeof(void*) * (ctx->plugin_count + 1));
     ctx->plugin_handles[ctx->plugin_count] = handle;
     ctx->plugin_count++;
 

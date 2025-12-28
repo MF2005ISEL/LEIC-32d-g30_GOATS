@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#define CAP_PROGRESSION 2
+
 void handleAllocError(const Status status)
 {
     fprintf(stderr, "\n%s\n", status.message);
@@ -27,4 +29,17 @@ void dynamicGrowth(void** ptr, size_t* cap)
 {
     *cap *= CAP_PROGRESSION;
     safeRealloc(ptr, (*cap) * sizeof(void*));
+}
+
+void free_array(void **array, size_t count)
+{
+    size_t i;
+
+    if (!array) return;
+
+    i = 0;
+    while (i < count)
+        free(array[i++]);
+
+    free(array);
 }

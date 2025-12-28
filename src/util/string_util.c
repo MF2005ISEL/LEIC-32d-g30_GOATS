@@ -22,7 +22,8 @@ void add_token(char*** tokens, size_t* num_tokens, size_t* cap, const char* star
 }
 
 // Generic split function
-char** split(const char* str, char sep, size_t* count) {
+char** split(const char* str, char sep, size_t* count) 
+{
     size_t num_tokens = 0, tokens_cap = INITIAL_TOKENS_CAP;
     char** tokens;
     const char *start = str, *ptr = str;
@@ -40,10 +41,9 @@ char** split(const char* str, char sep, size_t* count) {
     }
 
     // Add last token
-    if (ptr != start) {
+    if (ptr != start)
         add_token(&tokens, &num_tokens, &tokens_cap, start, ptr - start);
-    }
-
+    
     *count = num_tokens;
     return tokens;
 }
@@ -71,14 +71,4 @@ char* trim(char* str)
     str[j+1] = '\0';
 
     return newStr;
-}
-
-void free_split(char **tokens, size_t count)
-{
-    if (!tokens) return;
-
-    for (size_t i = 0; i < count; i++)
-        free(tokens[i]);
-
-    free(tokens);
 }
