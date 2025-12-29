@@ -163,7 +163,6 @@ void table_insert_row(table* t, size_t row_index)
     // move existing rows to fit the new one
     for (size_t i = t->row_num; i > row_index; i--)
         t->rows[i] = t->rows[i - 1];
-    
 
     row* new_row = &t->rows[row_index];
     safeMalloc((void**)&new_row->cells, sizeof(char*) * t->col_num);

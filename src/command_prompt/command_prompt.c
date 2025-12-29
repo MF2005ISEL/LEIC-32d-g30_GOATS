@@ -308,7 +308,7 @@ Status get_subtable_coordinates(const char* coordinates, unsigned short* col1, s
 
     if (count != 2)
     {
-        free(split_coordinates);
+        free_array((void**)split_coordinates, count);
         return ERROR;
     }
 
@@ -318,14 +318,16 @@ Status get_subtable_coordinates(const char* coordinates, unsigned short* col1, s
     
     if (status.code != OK.code)
     {
-        free(split_coordinates);
+        free_array((void**)split_coordinates, count);
         return ERROR;
     }
 
     coordinate2 = split_coordinates[1];
 
-    free(split_coordinates);
-    return process_coordinate(coordinate2, row2, col2);
+    status = process_coordinate(coordinate2, row2, col2);
+    
+    free_array((void**)split_coordinates, count);
+    return status;
 }
 
 static void cmd_show(Context* context, const char** args)
